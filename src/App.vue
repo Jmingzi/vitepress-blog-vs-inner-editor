@@ -17,14 +17,14 @@
 </template>
 
 <script>
+if (window.acquireVsCodeApi) {
+  window.vscode = window.acquireVsCodeApi()
+}
 async function uploadImg (data) {
-  if (window.acquireVsCodeApi) {
-    const vscode = window.acquireVsCodeApi()
-    vscode.postMessage({
-      type: 'blog-upload',
-      data
-    })
-  }
+  window.vscode.postMessage({
+    type: 'blog-upload',
+    data
+  })
 }
 
 export default {
@@ -68,18 +68,15 @@ export default {
       const i = this.input.indexOf('\n')
       const title = this.input.substr(0, i).replace(/#/g, '').trim()
       const input = this.input.substr(i)
-      if (window.acquireVsCodeApi) {
-        this.disable = true
-        const vscode = window.acquireVsCodeApi()
-        vscode.postMessage({
-          type: 'blog',
-          data: {
-            title,
-            input,
-            id: this.item.id
-          }
-        })
-      }
+      this.disable = true
+      window.vscode.postMessage({
+        type: 'blog',
+        data: {
+          title,
+          input,
+          id: this.item.id
+        }
+      })
     },
 
     update (e) {
