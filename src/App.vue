@@ -42,11 +42,15 @@ export default {
     }
   },
   created () {
+    const previousState = window.vscode.getState()
+    if (previousState) {
+      this.setData(previousState)
+    }
+
     window.addEventListener('message', e => {
       if (e.data.type === 'blog') {
-        this.item = e.data.data
-        // 拼上标题
-        this.input = `# ${this.item.title} \n\n\n${this.item.input}`
+        this.setData(e.data.data)
+        window.vscode.setState(this.item)
       } else if (e.data.type === 'blog-upload') {
         const uploadRes = e.data.data
         this.uploadProgress = 0
@@ -60,28 +64,37 @@ export default {
     this.editor = this.$refs.editor
   },
   methods: {
+    setData (data) {
+      this.item = data
+      this.input = `# ${this.item.title} \n\n\n${this.item.input.replace(/^\n+/, '')}`
+    },
+
+    getData () {
+      const i = this.input.indexOf('\n')
+      const title = this.input.substr(0, i).replace(/#/g, '').trim()
+      const input = this.input.substr(i)
+      return {
+        title,
+        input: input.replace(/^\n+/, ''),
+        id: this.item.id
+      }
+    },
+
     handleClick () {
       if (this.disable) {
         return
       }
-
-      const i = this.input.indexOf('\n')
-      const title = this.input.substr(0, i).replace(/#/g, '').trim()
-      const input = this.input.substr(i)
       this.disable = true
       window.vscode.postMessage({
         type: 'blog',
-        data: {
-          title,
-          input,
-          id: this.item.id
-        }
+        data: this.getData()
       })
     },
 
     update (e) {
       this.disable = false
       this.input = e.target.value
+      window.vscode.setState(this.getData())
     },
     tab (e, isAdd) {
       let indent = ''
