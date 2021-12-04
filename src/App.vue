@@ -12,11 +12,19 @@
     />
 
     <div class="vs-button" :class="{ disable }" @click="handleClick">保存</div>
+    <div v-if="showProgress" class="progress">图片上传中...</div>
   </div>
 </template>
 
 <script>
-async function uploadImg (base64) {
+async function uploadImg (data) {
+  if (window.acquireVsCodeApi) {
+    const vscode = window.acquireVsCodeApi()
+    vscode.postMessage({
+      type: 'blog-upload',
+      data
+    })
+  }
 }
 
 export default {
@@ -28,7 +36,9 @@ export default {
       input: '',
       editor: null,
       item: null,
-      disable: false
+      disable: false,
+      showProgress: false,
+      uploadProgress: 0
     }
   },
   created () {
@@ -37,6 +47,12 @@ export default {
         this.item = e.data.data
         // 拼上标题
         this.input = `# ${this.item.title} \n\n\n${this.item.input}`
+      } else if (e.data.type === 'blog-upload') {
+        const uploadRes = e.data.data
+        this.uploadProgress = 0
+        this.showProgress = false
+        const str = `![${uploadRes.data.sha}](${uploadRes.data.download_url})`
+        this.insertEditorString(str, str.length)
       }
     })
   },
@@ -133,7 +149,7 @@ export default {
     async upload (title, base64) {
       this.showProgress = true
       this.uploadProgress = 50
-      const uploadRes = await uploadImg({
+      await uploadImg({
         commit: title,
         // base64: base64.split(';')[1]
         base64: base64.split(',')[1]
@@ -142,10 +158,6 @@ export default {
         //   this.uploadProgress = num
         // }
       })
-      this.uploadProgress = 0
-      this.showProgress = false
-      const str = `![${uploadRes.data.sha}](${uploadRes.data.download_url})`
-      this.insertEditorString(str, str.length)
       // let name = title || 'jmingzi'
       // uploadImg({
       //   name,
@@ -193,5 +205,12 @@ export default {
   &.disable {
     background-color: rgba(0, 122, 204, .5);
   }
+}
+.progress {
+  position: fixed;
+  top: 17px;
+  right: 90px;
+  color: #fff;
+  font-size: 12px;
 }
 </style>
