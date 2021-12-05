@@ -1,11 +1,14 @@
 <template>
   <div id="app">
+    <input v-model="title" type="text" class="editor__title" placeholder="请输入标题">
+    <input v-model="tag" type="text" class="editor__tag" placeholder="标签一、标签二">
     <textarea
-      class="editor"
+      class="editor__content"
       ref="editor"
       :value="input"
       @input="update"
       @paste="paste"
+      @keydown.meta.exact.88.prevent="handleKeydownX"
       @keydown.9.exact.prevent="tab($event, true)"
       @keydown.shift.exact.9.prevent="tab($event, false)"
       placeholder="# hello world"
@@ -33,7 +36,9 @@ export default {
   },
   data () {
     return {
+      title: '',
       input: '',
+      tag: '',
       editor: null,
       item: null,
       disable: false,
@@ -64,18 +69,23 @@ export default {
     this.editor = this.$refs.editor
   },
   methods: {
+    handleKeydownX (e) {
+      // console.log(e)
+      // console.log(this.input)
+    },
+
     setData (data) {
       this.item = data
-      this.input = `# ${this.item.title} \n\n\n${this.item.input.replace(/^\n+/, '')}`
+      this.input = this.item.input.replace(/^\n+/, '')
+      this.title = this.item.title
+      this.tag = this.item.tag || ''
     },
 
     getData () {
-      const i = this.input.indexOf('\n')
-      const title = this.input.substr(0, i).replace(/#/g, '').trim()
-      const input = this.input.substr(i)
       return {
-        title,
-        input: input.replace(/^\n+/, ''),
+        title: this.title.trim(),
+        tag: this.tag.trim(),
+        input: this.input.replace(/^\n+/, '').trim(),
         id: this.item.id
       }
     },
@@ -189,17 +199,33 @@ export default {
 
 <style lang="less">
 .editor {
-  font-family: AppleSystemUIFont;
-  border: none;
-  background-color: #1e1e1e;
-  color: #fff;
-  width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 15px;
-  font-size: 14px;
-  &:focus {
-    outline: none;
+  &__title,
+  &__tag,
+  &__content {
+    display: block;
+    font-family: AppleSystemUIFont;
+    border: none;
+    background-color: #1e1e1e;
+    color: #fff;
+    margin: 0;
+    padding: 15px;
+    width: 100%;
+    &:focus {
+      outline: none;
+    }
+  }
+  &__title {
+    font-size: 18px;
+  }
+  &__tag {
+    font-size: 14px;
+    color: #aaa;
+    border-top: 1px #333 solid;
+    border-bottom: 1px #333 solid;
+  }
+  &__content {
+    height: 100vh;
+    font-size: 14px;
   }
 }
 .vs-button {
