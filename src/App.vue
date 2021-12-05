@@ -11,6 +11,7 @@
       @keydown.meta.exact.88.prevent="handleKeydownX"
       @keydown.9.exact.prevent="tab($event, true)"
       @keydown.shift.exact.9.prevent="tab($event, false)"
+      @scroll="handleScroll"
       placeholder="# hello world"
     />
 
@@ -43,7 +44,8 @@ export default {
       item: null,
       disable: false,
       showProgress: false,
-      uploadProgress: 0
+      uploadProgress: 0,
+      scrollTop: 0
     }
   },
   created () {
@@ -74,11 +76,22 @@ export default {
       // console.log(this.input)
     },
 
+    handleScroll (e) {
+      this.scrollTop = e.target.scrollTop
+      window.vscode.setState(this.getData())
+    },
+
     setData (data) {
       this.item = data
       this.input = this.item.input.replace(/^\n+/, '')
       this.title = this.item.title
       this.tag = this.item.tag || ''
+      this.scrollTop = data.scrollTop || 0
+      this.$nextTick(() => {
+        if (this.editor) {
+          this.editor.scrollTop = this.scrollTop
+        }
+      })
     },
 
     getData () {
@@ -86,7 +99,8 @@ export default {
         title: this.title.trim(),
         tag: this.tag.trim(),
         input: this.input.replace(/^\n+/, '').trim(),
-        id: this.item.id
+        id: this.item.id,
+        scrollTop: this.scrollTop
       }
     },
 
