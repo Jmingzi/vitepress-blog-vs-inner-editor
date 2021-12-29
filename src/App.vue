@@ -1,5 +1,11 @@
 <template>
-  <div id="app">
+  <div
+    id="app"
+    @dragover="handleDragOver"
+    @drop="handleDrop"
+    @dragleave.prevent="dragover = false"
+    :class="{ dragover }"
+  >
     <input v-model="title" type="text" class="editor__title" placeholder="请输入标题">
     <input v-model="tag" type="text" class="editor__tag" placeholder="标签一、标签二">
     <textarea
@@ -45,7 +51,8 @@ export default {
       disable: false,
       showProgress: false,
       uploadProgress: 0,
-      scrollTop: 0
+      scrollTop: 0,
+      dragover: false
     }
   },
   created () {
@@ -74,6 +81,26 @@ export default {
     handleKeydownX (e) {
       // console.log(e)
       // console.log(this.input)
+    },
+
+    handleDragOver (ev) {
+      // console.log(ev)
+      ev.preventDefault()
+      this.dragover = true
+      // ev.dataTransfer.dropEffect = 'move'
+    },
+
+    handleDrop (ev) {
+      ev.preventDefault()
+      this.dragover = false
+      const file = ev.dataTransfer.files[0]
+      if (file.type.startsWith('image')) {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => {
+          this.upload(this.title, reader.result)
+        }
+      }
     },
 
     handleScroll (e) {
@@ -113,6 +140,9 @@ export default {
         type: 'blog',
         data: this.getData()
       })
+      setTimeout(() => {
+        this.disable = false
+      }, 2000)
     },
 
     update (e) {
@@ -192,20 +222,6 @@ export default {
         //   this.uploadProgress = num
         // }
       })
-      // let name = title || 'jmingzi'
-      // uploadImg({
-      //   name,
-      //   base64: base64.split(';')[1],
-      //   cb: (num) => {
-      //     this.showProgress = true
-      //     this.uploadProgress = num
-      //   }
-      // }).then(res => {
-      //   this.uploadProgress = 0
-      //   this.showProgress = false
-      //   const str = `![${res.id}](${res.attributes.url})`
-      //   this.insertEditorString(str, str.length)
-      // })
     }
   }
 }
@@ -256,6 +272,13 @@ export default {
     background-color: rgba(0, 122, 204, .5);
   }
 }
+#app {
+  border: 1px #1e1e1e solid;
+  &.dragover {
+    border-color: rgb(0, 122, 204);
+  }
+}
+
 .progress {
   position: fixed;
   top: 17px;
